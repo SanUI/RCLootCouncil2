@@ -17,6 +17,7 @@ RCLootCouncil = LibStub("AceAddon-3.0"):NewAddon("RCLootCouncil", "AceConsole-3.
 local LibDialog = LibStub("LibDialog-1.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("RCLootCouncil")
 local lwin = LibStub("LibWindow-1.1")
+local libc = LibStub:GetLibrary("LibCompress")
 
 RCLootCouncil:SetDefaultModuleState(false)
 
@@ -467,6 +468,7 @@ function RCLootCouncil:ChatCommand(msg)
 	end
 end
 
+local libCE = libc:GetAddonEncodeTable()
 --- Send a RCLootCouncil Comm Message using AceComm-3.0
 -- See RCLootCouncil:OnCommReceived() on how to receive these messages.
 -- @param target The receiver of the message. Can be "group", "guild" or "playerName".
@@ -474,7 +476,9 @@ end
 -- @param vararg Any number of arguments to send along. Will be packaged as a table.
 function RCLootCouncil:SendCommand(target, command, ...)
 	-- send all data as a table, and let receiver unpack it
-	local toSend = self:Serialize(command, {...})
+	local one = self:Serialize(command, {...})
+	local two = libc:Compress(one)
+	local toSend = libCE:Encode(two)
 
 	if target == "group" then
 		if GetNumGroupMembers() > 0 then -- SendAddonMessage auto converts it to party is needed
@@ -482,7 +486,7 @@ function RCLootCouncil:SendCommand(target, command, ...)
 		--[[elseif num > 0 then -- Party
 			self:SendCommMessage("RCLootCouncil", toSend, "PARTY")]]
 		else--if self.testMode then -- Alone (testing)
-			self:SendCommMessage("RCLootCouncil", toSend, "WHISPER", self.playerName)
+			self:SendCommMessage("RCLootCouncil", toSend, "WHISPER", self.playerName, "NORMAL", self.Debug)
 		end
 
 	elseif target == "guild" then
@@ -500,14 +504,23 @@ function RCLootCouncil:SendCommand(target, command, ...)
 					-- Remake command to be "xrealm" and put target and command in the table
 					-- See "RCLootCouncil:HandleXRealmComms()" for more info
 					toSend = self:Serialize("xrealm", {target, command, ...})
-					self:SendCommMessage("RCLootCouncil", toSend, "RAID")
+					self:SendCommMessage("RCLootCouncil", toSend, "RAID", nil, "NORMAL", self.Debug)
 				end
 
 			else -- Should also be our own realm
-				self:SendCommMessage("RCLootCouncil", toSend, "WHISPER", target)
+				self:SendCommMessage("RCLootCouncil", toSend, "WHISPER", target,"NORMAL", self.Debug)
 			end
 		end
 	end
+end
+
+function RCLootCouncil:GetCommMessage(msg)
+	local decoded = libCE:Decode(msg)
+	local decompressed, failmsg = libc:Decompress(decoded)
+	if not decompressed then return self:Debug("Error decompressing:", failmsg)	end
+	local test, cmd, data = self:Deserialize(decompressed)
+	if not test then self:Debug("Error deserializing", cmd, data) end
+	return test, cmd, data
 end
 
 --- Receives RCLootCouncil commands
@@ -519,11 +532,11 @@ end
 -- 'data' is a table containing the varargs delivered to RCLootCouncil:SendCommand().
 -- To ensure correct handling of x-realm commands, include this line aswell:
 -- -- if RCLootCouncil:HandleXRealmComms(self, command, data, sender) then return end
-function RCLootCouncil:OnCommReceived(prefix, serializedMsg, distri, sender)
+function RCLootCouncil:OnCommReceived(prefix, compressed_data, distri, sender)
 	if prefix == "RCLootCouncil" then
-		self:DebugLog("Comm received:", serializedMsg, "from:", sender, "distri:", distri)
+		self:DebugLog("Comm received:", compressed_data, "from:", sender, "distri:", distri)
 		-- data is always a table to be unpacked
-		local test, command, data = self:Deserialize(serializedMsg)
+		local test, command, data = self:GetCommMessage(compressed_data)
 		-- NOTE: Since I can't find a better way to do this, all xrealms comms is routed through here
 		--			to make sure they get delivered properly. Must be included in every OnCommReceived() function.
 		if self:HandleXRealmComms(self, command, data, sender) then return end
@@ -544,7 +557,7 @@ function RCLootCouncil:OnCommReceived(prefix, serializedMsg, distri, sender)
 					if not self.mldb or (self.mldb and not self.mldb.numButtons) then -- Really shouldn't happen, but I'm tired of people somehow not receiving it...
 						self:Debug("Received loot table without having mldb :(", sender)
 						self:SendCommand(self.masterLooter, "MLdb_request")
-						return self:ScheduleTimer("OnCommReceived", 1, prefix, serializedMsg, distri, sender)
+						return self:ScheduleTimer("OnCommReceived", 1, prefix, compressed_data, distri, sender)
 					end
 
 					self:SendCommand("group", "lootAck", self.playerName) -- send ack
@@ -645,7 +658,7 @@ function RCLootCouncil:OnCommReceived(prefix, serializedMsg, distri, sender)
 			end
 		else
 			-- Most likely pre 2.0 command
-			local cmd = strsplit(" ", serializedMsg, 2)
+			local cmd = strsplit(" ", compressed_data, 2)
 			if cmd and cmd == "verTest" then
 				self:SendCommand(sender, "verTestReply", self.playerName, self.playerClass, self.guildRank, self.version, self.tVersion)
 				return

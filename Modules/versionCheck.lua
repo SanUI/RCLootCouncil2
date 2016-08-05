@@ -40,9 +40,9 @@ function RCVersionCheck:Hide()
 	self.frame:Hide()
 end
 
-function RCVersionCheck:OnCommReceived(prefix, serializedMsg, distri, sender)
+function RCVersionCheck:OnCommReceived(prefix, compressed_data, distri, sender)
 	if prefix == "RCLootCouncil" then
-		local test, command, data = addon:Deserialize(serializedMsg)
+		local test, command, data = addon:GetCommMessage(compressed_data)
 		if addon:HandleXRealmComms(self, command, data, sender) then return end
 		if test and command == "verTestReply" then
 			self:AddEntry(unpack(data))

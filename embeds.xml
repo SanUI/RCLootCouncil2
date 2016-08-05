@@ -21,4 +21,5 @@
   <Include file="Libs\lib-st\lib-st.xml" />
   <Include file="Libs\DropDownMenu\UIDropDownMenuTemplates.xml" />
   <Script file="Libs\DropDownMenu\UIDropDownMenu.lua"/>
+  <Script file="Libs\LibCompress\LibCompress.lua"/>
 </Ui>

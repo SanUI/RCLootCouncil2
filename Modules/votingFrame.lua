@@ -90,10 +90,10 @@ function RCVotingFrame:EndSession(hide)
 	if hide then self:Hide() end -- Hide if need be
 end
 
-function RCVotingFrame:OnCommReceived(prefix, serializedMsg, distri, sender)
+function RCVotingFrame:OnCommReceived(prefix, compressed_data, distri, sender)
 	if prefix == "RCLootCouncil" then
 		-- data is always a table to be unpacked
-		local test, command, data = addon:Deserialize(serializedMsg)
+		local test, command, data = addon:GetCommMessage(compressed_data)
 		if addon:HandleXRealmComms(self, command, data, sender) then return end
 
 		if test then

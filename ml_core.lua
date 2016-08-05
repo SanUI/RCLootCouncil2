@@ -258,10 +258,10 @@ function RCLootCouncilML:Timer(type, ...)
 	end
 end
 
-function RCLootCouncilML:OnCommReceived(prefix, serializedMsg, distri, sender)
+function RCLootCouncilML:OnCommReceived(prefix, compressed_data, distri, sender)
 	if prefix == "RCLootCouncil" then
 		-- data is always a table
-		local test, command, data = addon:Deserialize(serializedMsg)
+		local test, command, data = addon:GetCommMessage(compressed_data)
 		if addon:HandleXRealmComms(self, command, data, sender) then return end
 
 		if test and addon.isMasterLooter then -- only ML receives these commands
