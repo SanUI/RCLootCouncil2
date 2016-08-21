@@ -6,7 +6,7 @@ local addon = LibStub("AceAddon-3.0"):GetAddon("RCLootCouncil")
 local PersoLoot = addon:NewModule("RCPersoLoot")
 local L = LibStub("AceLocale-3.0"):GetLocale("RCLootCouncil")
 
-local LOOT_SELF_REGEX = gsub(gsub(LOOT_ITEM_SELF, "%%s", "(.+)"), "loot", "item")
+local LOOT_SELF_REGEX = gsub(LOOT_ITEM_PUSHED_SELF, "%%s", "(.+)")
 --local LOOT_REGEX = gsub(LOOT_ITEM, "%%s", "(.+)")
 local TRADE_REGEXP = gsub(BIND_TRADE_TIME_REMAINING, "%%s.","") 
 
