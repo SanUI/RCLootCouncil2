@@ -8,6 +8,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("RCLootCouncil")
 
 local LOOT_SELF_REGEX = gsub(gsub(LOOT_ITEM_SELF, "%%s", "(.+)"), "loot", "item")
 --local LOOT_REGEX = gsub(LOOT_ITEM, "%%s", "(.+)")
+local TRADE_REGEXP = gsub(BIND_TRADE_TIME_REMAINING, "%%s.","") 
 
 function PersoLoot:OnDisable()
   self.frame:UnregisterAllEvents()
@@ -21,15 +22,30 @@ local function OnEvent(self, event, ...)
 end
 
 function PersoLoot:CHAT_MSG_LOOT(chatmsg) 
-  print(chatmsg)
-  print(LOOT_SELF_REGEX)
   local _, _, itemlink = chatmsg:find(LOOT_SELF_REGEX)
   if not itemlink then return end
   local _, _, itemId = chatmsg:find("item:(%d+):")
 
-  print(itemlink)
-  print(tostring(itemlink))
-  print(tostring(itemId))
+  --print(itemlink)
+
+  self.tt:SetOwner(UIParent, 'ANCHOR_NONE')
+  self.tt:ClearLines()
+  self.tt:SetHyperlink(itemlink)
+
+
+  for i=1,PersoLootTT:NumLines() do 
+    local text=_G["PersoLootTTTextLeft"..i] 
+    local text=text:GetText()
+    if text and text:find(TRADE_REGEXP) then
+      print("Left<"..i..">: " .. text)
+    end
+
+--    local textr=_G["PersoLootTTTextRight"..i] 
+--    local textr=textr:GetText()
+--    if textr and textr:find(TRADE_REGEXP) then
+--      print("Right<"..i..">: " .. textr)
+--    end
+  end
 end
 
 function PersoLoot:OnEnable()
@@ -39,4 +55,7 @@ function PersoLoot:OnEnable()
 
   self.frame:RegisterEvent("CHAT_MSG_LOOT")
   self.frame:SetScript("OnEvent", OnEvent)
+
+  self.tt = CreateFrame('GameTooltip', 'PersoLootTT', UIParent, 'GameTooltipTemplate')
+
 end
