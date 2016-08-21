@@ -8,7 +8,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("RCLootCouncil")
 
 local LOOT_SELF_REGEX = gsub(LOOT_ITEM_PUSHED_SELF, "%%s", "(.+)")
 --local LOOT_REGEX = gsub(LOOT_ITEM, "%%s", "(.+)")
-local TRADE_REGEXP = gsub(BIND_TRADE_TIME_REMAINING, "%%s.","") 
+local TRADE_REGEXP = gsub(BIND_TRADE_TIME_REMAINING, "%%s.",".*") 
 
 function PersoLoot:OnDisable()
   self.frame:UnregisterAllEvents()
@@ -51,11 +51,11 @@ end
 function PersoLoot:OnEnable()
 	addon:Debug("OnEnable()")
   print("PersoLoot enabled!")
+  print(TRADE_REGEXP)
   self.frame = CreateFrame("Frame") 
 
   self.frame:RegisterEvent("CHAT_MSG_LOOT")
   self.frame:SetScript("OnEvent", OnEvent)
 
   self.tt = CreateFrame('GameTooltip', 'PersoLootTT', UIParent, 'GameTooltipTemplate')
-
 end
