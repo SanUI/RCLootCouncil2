@@ -30,6 +30,7 @@ local defaultModules = {
 	version =		"RCVersionCheck",
 	sessionframe =	"RCSessionFrame",
 	votingframe =	"RCVotingFrame",
+  persoLoot = "RCPersoLoot",
 }
 local userModules = {
 	masterlooter = nil,
@@ -257,6 +258,8 @@ function RCLootCouncil:OnEnable()
 	self:RegisterEvent("PLAYER_REGEN_DISABLED", "EnterCombat")
 	self:RegisterEvent("PLAYER_REGEN_ENABLED", "LeaveCombat")
 	--self:RegisterEvent("GROUP_ROSTER_UPDATE", "Debug", "event")
+  --
+  self:CallModule("persoLoot")
 
 	if IsInGuild() then
 		self.guildRank = select(2, GetGuildInfo("player"))
